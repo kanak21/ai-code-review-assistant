@@ -2,6 +2,7 @@ import asyncio
 
 from code_review_assistant.application.ports.standards_reader import StandardsReader
 from code_review_assistant.domain.models.changed_file import ChangedFile, ChangeKind
+from code_review_assistant.domain.models.review_finding import Severity
 from code_review_assistant.domain.models.review_run import ReviewRun
 from code_review_assistant.domain.models.standard import Enforcement, Standard
 
@@ -36,6 +37,8 @@ def test_standards_reader_accepts_provider_independent_implementation() -> None:
             source="engineering/csharp.md",
             enforcement=Enforcement.MANDATORY,
             language="csharp",
+            category="reliability",
+            severity=Severity.MEDIUM
         ),
     )
     reader: StandardsReader = FakeStandardsReader(standards)

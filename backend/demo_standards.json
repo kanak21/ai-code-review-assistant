@@ -1,0 +1,225 @@
+{
+  "organization_id": "demo-org",
+  "standards": [
+    {
+      "standard_id": "DEMO-CS-01",
+      "version": "1",
+      "title": "Pass cancellation tokens through async operations",
+      "guidance": "When a method accepts a CancellationToken, pass it to downstream asynchronous operations that support cancellation.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "reliability",
+      "severity": "medium"
+    },
+    {
+      "standard_id": "DEMO-CS-02",
+      "version": "1",
+      "title": "Avoid blocking asynchronous code",
+      "guidance": "Do not use .Result or .Wait() to synchronously block on a Task in application code; use await instead.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "reliability",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-03",
+      "version": "1",
+      "title": "Dispose owned disposable resources",
+      "guidance": "Dispose or asynchronously dispose resources your code creates and owns, using using or await using where appropriate.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "reliability",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-04",
+      "version": "1",
+      "title": "Do not use async void for ordinary methods",
+      "guidance": "Use async Task or async Task<T> for asynchronous methods. Reserve async void for event handlers that require it.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "reliability",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-05",
+      "version": "1",
+      "title": "Do not silently swallow exceptions",
+      "guidance": "Catch an exception only when the code can handle it, add useful context, or rethrow it. Do not leave catch blocks empty.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "reliability",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-06",
+      "version": "1",
+      "title": "Validate untrusted input at system boundaries",
+      "guidance": "Validate input from users, external services, and files before relying on its format, range, or required values.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "security",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-07",
+      "version": "1",
+      "title": "Authorize access to protected resources",
+      "guidance": "Before returning or modifying a protected resource, verify that the current caller is authorized for that resource.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "security",
+      "severity": "critical"
+    },
+    {
+      "standard_id": "DEMO-CS-08",
+      "version": "1",
+      "title": "Use parameterized database queries",
+      "guidance": "Pass data values as query parameters rather than concatenating or interpolating them into SQL statements.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "security",
+      "severity": "critical"
+    },
+    {
+      "standard_id": "DEMO-CS-09",
+      "version": "1",
+      "title": "Keep secrets out of source code",
+      "guidance": "Load credentials and API keys from an approved secret store or protected configuration; do not hard-code them.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "security",
+      "severity": "critical"
+    },
+    {
+      "standard_id": "DEMO-CS-10",
+      "version": "1",
+      "title": "Avoid logging sensitive data",
+      "guidance": "Do not write passwords, access tokens, or other sensitive personal or organizational data to logs.",
+      "source": "Fictional demo standards",
+      "enforcement": "mandatory",
+      "language": "csharp",
+      "category": "security",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-11",
+      "version": "1",
+      "title": "Handle nullable values explicitly",
+      "guidance": "Check potentially absent values before dereferencing them, or use appropriate nullable types and flow checks.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "reliability",
+      "severity": "medium"
+    },
+    {
+      "standard_id": "DEMO-CS-12",
+      "version": "1",
+      "title": "Avoid mutable shared state",
+      "guidance": "Do not share mutable state across requests or concurrent operations unless access is safely synchronized.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "reliability",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-13",
+      "version": "1",
+      "title": "Use specific exception types",
+      "guidance": "Throw an exception that describes the failure rather than using a general Exception for expected validation or state errors.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "maintainability",
+      "severity": "medium"
+    },
+    {
+      "standard_id": "DEMO-CS-14",
+      "version": "1",
+      "title": "Keep retry behavior bounded",
+      "guidance": "Retries for transient failures should have a defined limit and should not repeat non-idempotent operations unsafely.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "reliability",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-15",
+      "version": "1",
+      "title": "Test important behavior changes",
+      "guidance": "Add or update automated tests for changed behavior, especially error handling and important boundary cases.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "testing",
+      "severity": "medium"
+    },
+    {
+      "standard_id": "DEMO-CS-16",
+      "version": "1",
+      "title": "Avoid unexplained literal values",
+      "guidance": "Replace non-obvious repeated literal values with named constants or configuration values where that improves clarity.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "standard_id": "DEMO-CS-17",
+      "version": "1",
+      "title": "Keep methods focused",
+      "guidance": "Prefer methods with one clear responsibility; extract cohesive steps when a method becomes difficult to understand or test.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "standard_id": "DEMO-CS-18",
+      "version": "1",
+      "title": "Preserve public API compatibility",
+      "guidance": "Before changing a public method, type, or contract, check its callers and avoid breaking compatibility without an intentional migration.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "maintainability",
+      "severity": "high"
+    },
+    {
+      "standard_id": "DEMO-CS-19",
+      "version": "1",
+      "title": "Use structured logging",
+      "guidance": "Prefer structured logging fields over building log messages through string concatenation or interpolation.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "observability",
+      "severity": "low"
+    },
+    {
+      "standard_id": "DEMO-CS-20",
+      "version": "1",
+      "title": "Make collection ownership clear",
+      "guidance": "Avoid exposing mutable internal collections directly; return read-only views or copies when callers should not mutate internal state.",
+      "source": "Fictional demo standards",
+      "enforcement": "recommended",
+      "language": "csharp",
+      "category": "maintainability",
+      "severity": "medium"
+    }
+  ]
+}

@@ -56,6 +56,8 @@ def test_analyzer_port_accepts_provider_independent_implementation() -> None:
             source="engineering/csharp.md",
             enforcement=Enforcement.MANDATORY,
             language="csharp",
+            category="reliability",
+            severity=Severity.MEDIUM
         ),
     )
     analysis = ReviewAnalysis(

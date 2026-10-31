@@ -35,6 +35,8 @@ def make_standard() -> Standard:
         source="engineering/csharp.md",
         enforcement=Enforcement.MANDATORY,
         language="csharp",
+        category="reliability",
+        severity=Severity.MEDIUM
     )
 
 
