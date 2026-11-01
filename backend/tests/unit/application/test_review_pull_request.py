@@ -10,6 +10,18 @@ from code_review_assistant.domain.models.review_finding import ReviewFinding, Se
 from code_review_assistant.domain.models.review_run import ReviewRun
 from code_review_assistant.domain.models.standard import Enforcement, Standard
 from code_review_assistant.application.services.review_pull_request import ReviewPullRequest
+from code_review_assistant.infrastructure.analysis.csharp_standards_analyzer import (
+    CSharpStandardsAnalyzer,
+)
+from code_review_assistant.application.services.retrieve_relevant_standards import (
+    RetrieveRelevantStandards,
+)
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
+from code_review_assistant.infrastructure.llm.anthropic_review_analyzer import (
+    AnthropicReviewAnalyzer,
+)
 
 
 def make_run() -> ReviewRun:
@@ -195,3 +207,267 @@ def test_rejects_finding_that_cites_unsupplied_standard() -> None:
 
     with pytest.raises(ValueError, match="standard not supplied"):
         asyncio.run(use_case.execute(make_run()))
+
+
+def test_review_workflow_reports_demo_blocking_async_finding() -> None:
+    run = ReviewRun("demo-org", "demo-repo", 1, "revision-1")
+    changed_file = ChangedFile(
+        path="src/Example.cs",
+        kind=ChangeKind.MODIFIED,
+        additions=1,
+        deletions=1,
+        patch="@@ -1 +1 @@\n-await task;\n+var value = task.Result;\n",
+    )
+    standard = Standard(
+        standard_id="DEMO-CS-02",
+        version="1",
+        title="Avoid blocking asynchronous code",
+        guidance="Do not synchronously block on a Task.",
+        source="Fictional demo standards",
+        enforcement=Enforcement.MANDATORY,
+        language="csharp",
+        category="reliability",
+        severity=Severity.HIGH,
+    )
+    use_case = ReviewPullRequest(
+        FakePullRequestReader((changed_file,)),
+        FakeStandardsReader((standard,)),
+        CSharpStandardsAnalyzer(),
+    )
+
+    result = asyncio.run(use_case.execute(run))
+
+    assert result.run == run
+    assert result.coverage.status is CoverageStatus.COMPLETE
+    assert len(result.findings) == 1
+    assert result.findings[0].standard_id == "DEMO-CS-02"
+    assert result.findings[0].file_path == "src/Example.cs"
+    assert result.findings[0].start_line == 1
+    assert result.findings[0].evidence == "var value = task.Result;"
+
+
+def test_review_workflow_uses_retrieved_standards() -> None:
+    run = make_run()
+    changed_files = (make_file("src/example.cs"),)
+    mandatory = make_standard()
+    relevant = Standard(
+        standard_id="ORG-CS-02",
+        version="1",
+        title="Avoid blocking asynchronous code",
+        guidance="Do not synchronously block on a Task.",
+        source="engineering/csharp.md",
+        enforcement=Enforcement.RECOMMENDED,
+        language="csharp",
+        category="reliability",
+        severity=Severity.HIGH,
+    )
+
+    class FakeEmbeddingStore:
+        async def list_mandatory_standards(
+            self,
+            organization_id: str,
+            language: str,
+        ) -> tuple[Standard, ...]:
+            assert organization_id == run.organization_id
+            assert language == "csharp"
+            return (mandatory,)
+
+        async def find_similar_standards(
+            self,
+            organization_id: str,
+            language: str,
+            embedding_model: str,
+            query_vector: tuple[float, ...],
+            limit: int,
+        ) -> tuple[Standard, ...]:
+            assert organization_id == run.organization_id
+            assert language == "csharp"
+            assert embedding_model == "test-embedding-model"
+            assert len(query_vector) == 1536
+            assert limit == 5
+            return (relevant,)
+
+    class FakeEmbedder:
+        model = "test-embedding-model"
+        dimensions = 1536
+
+        async def embed(
+            self,
+            texts: tuple[str, ...],
+        ) -> tuple[tuple[float, ...], ...]:
+            assert len(texts) == 1
+            return ((1.0,) + (0.0,) * 1535,)
+
+    analysis = ReviewAnalysis(
+        analyzed_paths=("src/example.cs",),
+        findings=(),
+        checks=(),
+    )
+    analyzer = FakeReviewAnalyzer(analysis)
+    workflow = ReviewPullRequest(
+        FakePullRequestReader(changed_files),
+        RetrieveRelevantStandards(FakeEmbeddingStore(), FakeEmbedder()),
+        analyzer,
+    )
+
+    result = asyncio.run(workflow.execute(run))
+
+    assert analyzer.received_standards == (mandatory, relevant)
+    assert result.findings == ()
+
+
+def test_review_workflow_passes_retrieved_standards_to_analyzer() -> None:
+    run = make_run()
+    changed_files = (make_file("src/example.cs"),)
+    mandatory = make_standard()
+    relevant = Standard(
+        standard_id="ORG-CS-02",
+        version="1",
+        title="Avoid blocking asynchronous code",
+        guidance="Do not synchronously block on a Task.",
+        source="engineering/csharp.md",
+        enforcement=Enforcement.RECOMMENDED,
+        language="csharp",
+        category="reliability",
+        severity=Severity.HIGH,
+    )
+
+    class FakeEmbeddingStore:
+        async def list_mandatory_standards(
+            self,
+            organization_id: str,
+            language: str,
+        ) -> tuple[Standard, ...]:
+            assert organization_id == run.organization_id
+            assert language == "csharp"
+            return (mandatory,)
+
+        async def find_similar_standards(
+            self,
+            organization_id: str,
+            language: str,
+            embedding_model: str,
+            query_vector: tuple[float, ...],
+            limit: int,
+        ) -> tuple[Standard, ...]:
+            assert organization_id == run.organization_id
+            assert language == "csharp"
+            assert embedding_model == "test-embedding-model"
+            assert len(query_vector) == 1536
+            assert limit == 5
+            return (relevant,)
+
+    class FakeEmbedder:
+        model = "test-embedding-model"
+        dimensions = 1536
+
+        async def embed(
+            self,
+            texts: tuple[str, ...],
+        ) -> tuple[tuple[float, ...], ...]:
+            assert len(texts) == 1
+            return ((1.0,) + (0.0,) * 1535,)
+
+    analysis = ReviewAnalysis(
+        analyzed_paths=("src/example.cs",),
+        findings=(),
+        checks=(),
+    )
+    analyzer = FakeReviewAnalyzer(analysis)
+    workflow = ReviewPullRequest(
+        FakePullRequestReader(changed_files),
+        RetrieveRelevantStandards(FakeEmbeddingStore(), FakeEmbedder()),
+        analyzer,
+    )
+
+    result = asyncio.run(workflow.execute(run))
+
+    assert analyzer.received_standards == (mandatory, relevant)
+    assert result.findings == ()
+
+
+def test_review_workflow_with_rag_and_mocked_anthropic() -> None:
+    run = make_run()
+    changed_file = make_file("src/example.cs")
+    standard = make_standard()
+
+    class FakeEmbeddingStore:
+        async def list_mandatory_standards(
+            self,
+            organization_id: str,
+            language: str,
+        ) -> tuple[Standard, ...]:
+            assert organization_id == run.organization_id
+            assert language == "csharp"
+            return (standard,)
+
+        async def find_similar_standards(
+            self,
+            organization_id: str,
+            language: str,
+            embedding_model: str,
+            query_vector: tuple[float, ...],
+            limit: int,
+        ) -> tuple[Standard, ...]:
+            assert organization_id == run.organization_id
+            assert language == "csharp"
+            assert embedding_model == "test-embedding-model"
+            assert len(query_vector) == 1536
+            assert limit == 5
+            return ()
+
+    class FakeEmbedder:
+        model = "test-embedding-model"
+        dimensions = 1536
+
+        async def embed(
+            self,
+            texts: tuple[str, ...],
+        ) -> tuple[tuple[float, ...], ...]:
+            assert len(texts) == 1
+            return ((1.0,) + (0.0,) * 1535,)
+
+    create = AsyncMock(
+        return_value=SimpleNamespace(
+            content=[
+                SimpleNamespace(
+                    type="tool_use",
+                    name="submit_review",
+                    input={
+                        "findings": [
+                            {
+                                "rule_id": "AI-001",
+                                "standard_id": standard.standard_id,
+                                "severity": "medium",
+                                "title": "Review finding",
+                                "rationale": "This added line violates the standard.",
+                                "file_path": "src/example.cs",
+                                "start_line": 2,
+                                "end_line": 2,
+                                "evidence": "new",
+                            }
+                        ]
+                    },
+                )
+            ]
+        )
+    )
+    client = SimpleNamespace(messages=SimpleNamespace(create=create))
+
+    retrieval = RetrieveRelevantStandards(FakeEmbeddingStore(), FakeEmbedder())
+    analyzer = AnthropicReviewAnalyzer(client, model="test-model")
+    workflow = ReviewPullRequest(
+        FakePullRequestReader((changed_file,)),
+        retrieval,
+        analyzer,
+    )
+
+    result = asyncio.run(workflow.execute(run))
+
+    assert result.coverage.status is CoverageStatus.COMPLETE
+    assert len(result.findings) == 1
+    assert result.findings[0].standard_id == standard.standard_id
+    assert result.findings[0].file_path == "src/example.cs"
+    assert result.findings[0].start_line == 2
+    assert result.findings[0].evidence == "new"
+    create.assert_awaited_once()

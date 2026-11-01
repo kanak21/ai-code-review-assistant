@@ -8,6 +8,27 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from code_review_assistant.settings import Settings
 from code_review_assistant.infrastructure.database.base import Base
 from code_review_assistant.infrastructure.database.standard_record import StandardRecord
+from code_review_assistant.infrastructure.database.standard_embedding_record import (
+    StandardEmbeddingRecord,
+)
+from code_review_assistant.infrastructure.database.github_installation_record import (
+    GitHubInstallationRecord,
+)
+
+from code_review_assistant.infrastructure.database.review_job_record import (
+    ReviewJobRecord,
+)
+
+from code_review_assistant.infrastructure.database.review_record import (
+    ReviewRecord,
+)
+
+from code_review_assistant.infrastructure.database.review_finding_record import (
+    ReviewFindingRecord,
+)
+from code_review_assistant.infrastructure.database.review_check_record import (
+    ReviewCheckRecord,
+)
 
 config = context.config
 
